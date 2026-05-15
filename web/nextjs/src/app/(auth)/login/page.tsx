@@ -3,13 +3,24 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabaseClient } from '@/lib/supabase/client';
+import { testSupabaseConnection } from '@/lib/supabase/connection-test';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'failed'>('checking');
   const router = useRouter();
+
+  // Test Supabase connection on mount
+  useEffect(() => {
+    const checkConnection = async () => {
+      const isConnected = await testSupabaseConnection();
+      setConnectionStatus(isConnected ? 'connected' : 'failed');
+    };
+    checkConnection();
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,6 +68,34 @@ export default function LoginPage() {
   return (
     <div style={{ maxWidth: '400px', margin: '0 auto', padding: '2rem' }}>
       <h1>VetApp Giriş</h1>
+      
+      {/* Connection Status */}
+      <div style={{
+        marginBottom: '1rem',
+        padding: '0.75rem',
+        borderRadius: '4px',
+        backgroundColor: connectionStatus === 'connected' ? '#e8f5e9' : connectionStatus === 'failed' ? '#ffebee' : '#e3f2fd',
+        color: connectionStatus === 'connected' ? '#2e7d32' : connectionStatus === 'failed' ? '#c62828' : '#1565c0',
+        fontSize: '0.875rem',
+        textAlign: 'center'
+      }}>
+        {connectionStatus === 'checking' && '🔄 Supabase bağlantısı kontrol ediliyor...'}
+        {connectionStatus === 'connected' && '✅ Supabase bağlantısı başarılı'}
+        {connectionStatus === 'failed' && '❌ Supabase bağlantısı başarısız. Env değişkenlerini kontrol edin.'}
+      </div>
+
+      {error && (
+        <div style={{
+          marginBottom: '1rem',
+          padding: '0.75rem',
+          borderRadius: '4px',
+          backgroundColor: '#ffebee',
+          color: '#c62828'
+        }}>
+          {error}
+        </div>
+      )}
+
       <form onSubmit={handleLogin}>
         <div style={{ marginBottom: '1rem' }}>
           <label>Email:</label>
