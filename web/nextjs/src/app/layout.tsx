@@ -1,8 +1,7 @@
-'use client';
-
+import type { Metadata } from 'next';
 import { ReactNode } from 'react';
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'VetApp - Veteriner Klinik Yönetim Sistemi',
   description: 'Veteriner klinikleri için modern yönetim sistemi',
 };
