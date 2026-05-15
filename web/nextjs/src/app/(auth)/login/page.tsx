@@ -11,13 +11,20 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'failed'>('checking');
+  const [connectionMessage, setConnectionMessage] = useState<string>('');
   const router = useRouter();
 
   // Test Supabase connection on mount
   useEffect(() => {
     const checkConnection = async () => {
-      const isConnected = await testSupabaseConnection();
-      setConnectionStatus(isConnected ? 'connected' : 'failed');
+      const result = await testSupabaseConnection();
+      if (result.success) {
+        setConnectionStatus('connected');
+        setConnectionMessage(result.message);
+      } else {
+        setConnectionStatus('failed');
+        setConnectionMessage(result.message);
+      }
     };
     checkConnection();
   }, []);
@@ -80,8 +87,8 @@ export default function LoginPage() {
         textAlign: 'center'
       }}>
         {connectionStatus === 'checking' && '🔄 Supabase bağlantısı kontrol ediliyor...'}
-        {connectionStatus === 'connected' && '✅ Supabase bağlantısı başarılı'}
-        {connectionStatus === 'failed' && '❌ Supabase bağlantısı başarısız. Env değişkenlerini kontrol edin.'}
+        {connectionStatus === 'connected' && `✅ ${connectionMessage}`}
+        {connectionStatus === 'failed' && `❌ ${connectionMessage}`}
       </div>
 
       {error && (
