@@ -25,10 +25,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  // Eğer token varsa ve public route ise dashboard'a yönlendir
+  // Eğer token varsa ve public route ise ana sayfaya yönlendir
   if (supabaseAccessToken && isPublicRoute) {
-    // TODO: User role'ü kontrol edip uygun dashboard'a yönlendir
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    // Ana sayfa otomatik olarak role'e göre redirect eder
+    return NextResponse.redirect(new URL('/', request.url));
   }
 
   return NextResponse.next();

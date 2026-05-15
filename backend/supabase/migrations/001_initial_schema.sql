@@ -860,3 +860,70 @@ CREATE POLICY "clinic_admin_update_invite_links"
       AND is_active = true
     )
   );
+
+-- ============================================================================
+-- 6. TRIGGERS (updated_at otomatik update)
+-- ============================================================================
+
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER profiles_updated_at
+  BEFORE UPDATE ON profiles
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER clinics_updated_at
+  BEFORE UPDATE ON clinics
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER clinic_members_updated_at
+  BEFORE UPDATE ON clinic_members
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER owners_updated_at
+  BEFORE UPDATE ON owners
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER pets_updated_at
+  BEFORE UPDATE ON pets
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER appointments_updated_at
+  BEFORE UPDATE ON appointments
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER price_requests_updated_at
+  BEFORE UPDATE ON price_requests
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER health_records_updated_at
+  BEFORE UPDATE ON health_records
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER reminders_updated_at
+  BEFORE UPDATE ON reminders
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER services_updated_at
+  BEFORE UPDATE ON services
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER invite_links_updated_at
+  BEFORE UPDATE ON invite_links
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
