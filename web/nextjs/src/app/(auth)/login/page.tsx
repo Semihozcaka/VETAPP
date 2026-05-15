@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { supabaseClient } from '@/lib/supabase/client';
 import { testSupabaseConnection } from '@/lib/supabase/connection-test';
 
@@ -12,7 +11,6 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'failed'>('checking');
   const [connectionMessage, setConnectionMessage] = useState<string>('');
-  const router = useRouter();
 
   // Test Supabase connection on mount
   useEffect(() => {
@@ -35,6 +33,10 @@ export default function LoginPage() {
     setError(null);
 
     try {
+      console.log('📝 [Login] Form submitted:', { email });
+      
+      // Step 1: Auth login
+      console.log('🔐 [Login] Supabase auth.signInWithPassword çağrılıyor...');
       const { data, error: signInError } =
         await supabaseClient.auth.signInWithPassword({
           email,
@@ -42,31 +44,63 @@ export default function LoginPage() {
         });
 
       if (signInError) {
-        setError(signInError.message);
+        console.error('❌ [Login] Auth error:', signInError.message);
+        setError(`Auth hatası: ${signInError.message}`);
+        setLoading(false);
         return;
       }
 
-      if (data.user) {
-        // User profil bilgisini getir ve role'e göre yönlendir
-        const { data: profile } = await supabaseClient
-          .from('profiles')
-          .select('role')
-          .eq('id', data.user.id)
-          .single();
-
-        if (profile) {
-          const roleRoutes: Record<string, string> = {
-            super_admin: '/super-admin/clinics',
-            clinic_admin: '/clinic/dashboard',
-            pet_owner: '/pet-owner/dashboard',
-          };
-
-          const redirectUrl = roleRoutes[profile.role] || '/';
-          router.push(redirectUrl);
-        }
+      if (!data.user) {
+        console.error('❌ [Login] data.user undefined');
+        setError('Kullanıcı verisi alınamadı');
+        setLoading(false);
+        return;
       }
-    } catch (err) {
-      setError('Login başarısız. Lütfen tekrar deneyin.');
+
+      console.log('✅ [Login] Auth başarılı. User ID:', data.user.id);
+
+      // Step 2: Get user profile and role
+      console.log('🔍 [Login] profiles tablosundan role çekiliyor...');
+      const { data: profile, error: profileError } = await supabaseClient
+        .from('profiles')
+        .select('role')
+        .eq('id', data.user.id)
+        .single();
+
+      if (profileError) {
+        console.error('❌ [Login] Profile sorgusu hatası:', profileError.message);
+        setError(`Profil sorgusu hatası: ${profileError.message}`);
+        setLoading(false);
+        return;
+      }
+
+      if (!profile) {
+        console.error('❌ [Login] Profile bulunamadı');
+        setError('Profil bulunamadı. Lütfen sistem yöneticisine başvurun.');
+        setLoading(false);
+        return;
+      }
+
+      console.log('✅ [Login] Profile bulundu. Role:', profile.role);
+
+      // Step 3: Redirect based on role
+      const roleRoutes: Record<string, string> = {
+        super_admin: '/super-admin/clinics',
+        clinic_admin: '/clinic/dashboard',
+        pet_owner: '/pet-owner/dashboard',
+      };
+
+      const redirectUrl = roleRoutes[profile.role] || '/';
+      console.log('🚀 [Login] Redirect yapılıyor:', redirectUrl);
+      
+      // Use window.location for redirect (more reliable than router.push)
+      // This ensures cookies are properly set before redirect
+      window.location.href = redirectUrl;
+      console.log('✅ [Login] window.location.href set edildi');
+    } catch (err: unknown) {
+      console.error('❌ [Login] Catch error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Bilinmeyen hata';
+      setError(`Login başarısız: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
